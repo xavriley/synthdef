@@ -4,7 +4,11 @@
 
 A gem to work with SuperCollider's binary synthdef format. This uses the excellent [`bindata`](https://github.com/dmendel/bindata) gem to define the spec in a very readable way. The implementation is less than 60 lines of code.
 
-Inspiration for the spec was taken from the following links:
+I found the actual spec here:
+
+[http://doc.sccode.org/Reference/Synth-Definition-File-Format.html](http://doc.sccode.org/Reference/Synth-Definition-File-Format.html)
+
+Before I found the spec(!), inspiration was taken from the following links:
 
 - [Clojure - Overtone - synthdef.clj](https://github.com/overtone/overtone/blob/master/src/overtone/sc/machinery/synthdef.clj)
 
