@@ -38,6 +38,26 @@ Or install it yourself as:
 
     $ gem install synthdef
 
+## Command line usage
+
+The gem ships with a command line tool to print the contents of a synthdef file as json
+
+```
+$ gem install synthdef
+$ synthdef /path/to/synthdefs/foo.scsyndef
+=> {
+  "file_type_id": "SCgf",
+  "file_version": 1,
+  "no_of_synthdefs": 1,
+  "synthdefs": [
+    {
+      "name": "sonic-pi-pretty_bell",
+      "no_of_constants": 15,
+      "constants": [
+        0.0,
+        ...
+```
+
 ## Usage
 
 Take a binary scsyndef file (you can find an example in `spec/data/recorder.scsyndef`)

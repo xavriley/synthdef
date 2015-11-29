@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+require 'synthdef'
+require 'json'
+
+puts JSON.pretty_generate(Synthdef.read(ARGF.read).snapshot)
