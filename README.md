@@ -44,10 +44,29 @@ The gem ships with a command line tool to print the contents of a synthdef file 
 
 ```
 $ gem install synthdef
+$ synthdef -v
+synthdef gem version 0.0.5
+Manipulate SuperCollider synthdef files from the command line
+Usage: synthdef [options] [path]
+    -c, --convert [VERSION]          Specify synthdef version of output
+    -f, --format [FORMAT]            Specify output format: json,  raw
+    -v, --version                    Show version
 $ synthdef /path/to/synthdefs/foo.scsyndef
 => {
   "file_type_id": "SCgf",
   "file_version": 1,
+  "no_of_synthdefs": 1,
+  "synthdefs": [
+    {
+      "name": "sonic-pi-pretty_bell",
+      "no_of_constants": 15,
+      "constants": [
+        0.0,
+        ...
+$ synthdef --convert 2 /path/to/synthdefs/foo.scsyndef
+=> {
+  "file_type_id": "SCgf",
+  "file_version": 2,
   "no_of_synthdefs": 1,
   "synthdefs": [
     {
