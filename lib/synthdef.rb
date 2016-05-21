@@ -24,35 +24,35 @@ class Synthdef < BinData::Record
   array :synthdefs, initial_length: lambda { no_of_synthdefs } do
     pascal_string :name
 
-    choice        :no_of_constants, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+    choice        :no_of_constants, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
     array         :constants, initial_length: lambda { no_of_constants } do
       float :constant
     end
 
-    choice        :no_of_params, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+    choice        :no_of_params, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
     array        :params, initial_length: lambda { no_of_params } do
       float :initial_parameter_value
     end
 
-    choice        :no_of_param_names, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+    choice        :no_of_param_names, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
     array        :param_names, initial_length: lambda { no_of_param_names } do
       pascal_string :param_name
-      choice        :param_index, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+      choice        :param_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
     end
 
-    choice        :no_of_ugens, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+    choice        :no_of_ugens, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
     array        :ugens, initial_length: lambda { no_of_ugens } do
       pascal_string :ugen_name
       int8          :rate
-      choice        :no_of_inputs, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
-      choice        :no_of_outputs, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+      choice        :no_of_inputs, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+      choice        :no_of_outputs, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
       int16         :special, initial_value: 0
       array         :inputs, initial_length: lambda { no_of_inputs } do
-        choice :src, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+        choice :src, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
         if lambda { src == -1 }
-          choice :input_constant_index, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+          choice :input_constant_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
         else
-          choice :input_ugen_index, :selection => :check_version, :choices => {0 => :int16, 1 => :int32}
+          choice :input_ugen_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
         end
       end
       array         :outputs, initial_length: lambda { no_of_outputs } do

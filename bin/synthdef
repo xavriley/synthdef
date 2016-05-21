@@ -1,5 +1,50 @@
 #!/usr/bin/env ruby
 require 'synthdef'
 require 'json'
+require 'optparse'
 
-puts JSON.pretty_generate(Synthdef.read(ARGF.read).snapshot)
+ARGV << '-h' if ARGV.empty?
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: synthdef [options] [path]"
+
+  opts.on("-c", "--convert [VERSION]", ["1", "2"], "Specify synthdef version of output") do |c|
+    options[:convert] = c
+  end
+
+	opts.on("-f", "--format [FORMAT]", ["json", "raw"], "Specify output format: json,  raw") do |f|
+		options[:format] = f
+	end
+
+	# Another typical switch to print the version.
+	opts.on_tail("-v", "--version", "Show version") do
+		puts "synthdef gem version #{Synthdef::VERSION}"
+    puts "Manipulate SuperCollider synthdef files from the command line"
+    puts opts
+		exit
+	end
+end.parse!
+
+## Work with STDIN and FILENAME and warn if not given
+begin
+if (ARGF.filename != "-" and File.exist?(File.expand_path(ARGF.filename))) or (not STDIN.tty? and not STDIN.closed?)
+  sdef = Synthdef.read(ARGF.read)
+end
+rescue Errno::ENOENT
+  $stderr.puts "Synthdef not found: #{ARGF.filename}"
+  exit 1
+end
+
+sdef[:file_version] = options[:convert].to_i if options[:convert]
+
+options[:format] ||= "json"
+case options[:format]
+when "json"
+	puts JSON.pretty_generate(sdef.snapshot)
+when "raw"
+  puts sdef.to_binary_s
+else
+  $stderr.puts "Invalid output format chosen"
+  exit 1
+end
