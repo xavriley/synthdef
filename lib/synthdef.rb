@@ -9,6 +9,15 @@ class PascalString < BinData::Primitive
   def set(v) self.data = v; end
 end
 
+class SynthInt < BinData::Choice
+  endian :big
+  default_parameter :selection => :check_version
+  default_parameter :copy_on_change => true
+
+  int16 0
+  int32 1
+end
+
 class Synthdef < BinData::Record
   def check_version
     # Returns zero based index for choices
@@ -24,35 +33,35 @@ class Synthdef < BinData::Record
   array :synthdefs, initial_length: lambda { no_of_synthdefs } do
     pascal_string :name
 
-    choice        :no_of_constants, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+    synth_int     :no_of_constants
     array         :constants, initial_length: lambda { no_of_constants } do
       float :constant
     end
 
-    choice        :no_of_params, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+    synth_int    :no_of_params
     array        :params, initial_length: lambda { no_of_params } do
       float :initial_parameter_value
     end
 
-    choice        :no_of_param_names, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+    synth_int    :no_of_param_names
     array        :param_names, initial_length: lambda { no_of_param_names } do
       pascal_string :param_name
-      choice        :param_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+      synth_int    :param_index
     end
 
-    choice        :no_of_ugens, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+    synth_int    :no_of_ugens
     array        :ugens, initial_length: lambda { no_of_ugens } do
       pascal_string :ugen_name
       int8          :rate
-      choice        :no_of_inputs, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
-      choice        :no_of_outputs, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+      synth_int     :no_of_inputs
+      synth_int     :no_of_outputs
       int16         :special, initial_value: 0
       array         :inputs, initial_length: lambda { no_of_inputs } do
-        choice :src, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+        synth_int  :src
         if lambda { src == -1 }
-          choice :input_constant_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+          synth_int :input_constant_index
         else
-          choice :input_ugen_index, :selection => :check_version, :copy_on_change => true, :choices => {0 => :int16, 1 => :int32}
+          synth_int :input_ugen_index
         end
       end
       array         :outputs, initial_length: lambda { no_of_outputs } do
