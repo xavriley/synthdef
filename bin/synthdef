@@ -2,6 +2,7 @@
 require 'synthdef'
 require 'json'
 require 'optparse'
+require 'pp'
 
 ARGV << '-h' if ARGV.empty?
 
@@ -13,7 +14,7 @@ OptionParser.new do |opts|
     options[:convert] = c
   end
 
-	opts.on("-f", "--format [FORMAT]", ["json", "raw"], "Specify output format: json,  raw") do |f|
+	opts.on("-f", "--format [FORMAT]", ["json", "ruby", "raw"], "Specify output format: json, ruby,  raw") do |f|
 		options[:format] = f
 	end
 
@@ -42,6 +43,8 @@ options[:format] ||= "json"
 case options[:format]
 when "json"
 	puts JSON.pretty_generate(sdef.snapshot)
+when "ruby"
+  pp sdef.snapshot
 when "raw"
   puts sdef.to_binary_s
 else
