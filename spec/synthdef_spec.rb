@@ -41,17 +41,17 @@ describe Synthdef do
   end
 
   it 'checks for a list of required inputs and outputs' do
-		parsed_synthdef = Synthdef.read(complex_synthdef_binary)
+    parsed_synthdef = Synthdef.read(complex_synthdef_binary)
     required_params = [:note, :out_bus]
 
-		expect(Synthdef.has_params?(parsed_synthdef, required_params)).to be true
-	end
+    expect(Synthdef.has_params?(parsed_synthdef, required_params)).to be true
+  end
 
-	it 'can identify param groups like slideable'
-	it 'can rename output buses'
-	it 'produces a dot file for a graph'
-	it 'renders a pdf of the graph'
-	it 'takes configuration from a json file'
+  it 'can identify param groups like slideable'
+  it 'can rename output buses'
+  it 'produces a dot file for a graph'
+  it 'renders a pdf of the graph'
+  it 'takes configuration from a json file'
 
   it 'can parse a synthdef that uses all types including variants and initial rate'
 end
