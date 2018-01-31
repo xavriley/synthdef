@@ -21,10 +21,10 @@ describe Synthdef do
     expect(parsed_synthdef[:file_version]).to eq(2)
     expect(parsed_synthdef[:no_of_synthdefs]).to eq(1)
     expect(parsed_synthdef[:synthdefs].first[:no_of_constants]).to eq(32)
-    expect(parsed_synthdef[:synthdefs].first[:constants].last).to eq(-4.0)
-    expect(parsed_synthdef[:synthdefs].first[:no_of_params]).to eq(5)
-    expect(parsed_synthdef[:synthdefs].first[:param_names].last).to eq({param_name: "gate", param_index: 4})
-    expect(parsed_synthdef[:synthdefs].first[:no_of_ugens]).to eq(104)
+    expect(parsed_synthdef[:synthdefs].first[:constants].last).to eq(0.9056051969528198)
+    expect(parsed_synthdef[:synthdefs].first[:no_of_params]).to eq(31)
+    expect(parsed_synthdef[:synthdefs].first[:param_names].last).to eq({param_name: "out_bus", param_index: 30})
+    expect(parsed_synthdef[:synthdefs].first[:no_of_ugens]).to eq(141)
     expect(parsed_synthdef[:synthdefs].first[:ugens].last[:ugen_name]).to eq("Out")
     expect(parsed_synthdef[:synthdefs].first[:no_of_variants]).to eq(0)
   end
@@ -39,4 +39,19 @@ describe Synthdef do
     expect(converted_synthdef[:file_version]).to eq(2)
     expect(converted_synthdef.to_h.except(:file_version)).to eq(parsed_synthdef.snapshot.to_h.except(:file_version))
   end
+
+  it 'checks for a list of required inputs and outputs' do
+		parsed_synthdef = Synthdef.read(complex_synthdef_binary)
+    required_params = [:note, :out_bus]
+
+		expect(Synthdef.has_params?(parsed_synthdef, required_params)).to be true
+	end
+
+	it 'can identify param groups like slideable'
+	it 'can rename output buses'
+	it 'produces a dot file for a graph'
+	it 'renders a pdf of the graph'
+	it 'takes configuration from a json file'
+
+  it 'can parse a synthdef that uses all types including variants and initial rate'
 end
