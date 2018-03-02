@@ -1,3 +1,7 @@
+require 'rgl/base'
+require 'rgl/adjacency'
+require 'rgl/dot'
+
 require "synthdef/version"
 require "synthdef/graphviz"
 require "synthdef/parser"
