@@ -47,15 +47,36 @@ describe Synthdef do
     expect(Synthdef.has_params?(parsed_synthdef, required_params)).to be true
   end
 
-  it 'can identify param groups like slideable'
-  it 'can rename output buses'
-  it 'produces a dot file for a graph' do
+  it 'can identify param groups like slideable' do
+    # identify a param by name
+    # check if it's already slideable
+    # add slide params in if not EnvGen with default args
+    # need to also specify arg limits
+
     parsed_synthdef = Synthdef.read(complex_synthdef_binary).snapshot.synthdefs.first
+
+    acc = {:slideable => [], :non_slideable => []}
+
+    slideable_params = parsed_synthdef[:param_names].select {|x|
+      x[:param_name][/_slide\Z|_slide_shape\Z|_slide_curve\Z/]
+    }
+
+    slideable_param_base_names = slideable_params.map {|x|
+      x[:param_name].gsub(/_slide\Z|_slide_shape\Z|_slide_curve\Z/, '')
+    }.uniq
+
+    slideable_and_non_slideable_params = parsed_synthdef[:param_names].inject(acc) {|x|
+      x[:param_name][/_slide\Z|_slide_shape\Z|_slide_curve\Z/]
+    }
+  end
+
+  it 'can rename output buses'
+
+  it 'produces a dot file for a graph' do
+    parsed_synthdef = Synthdef.read(IO.read "/Users/xriley/Downloads/sonic-pi-fx_echo.scsyndef").snapshot.synthdefs.first
     parsed_synthdef[:ugens].map!.with_index {|u,i|
       u.merge(ugen_index: i, ugen_id: "#{i}#{u[:ugen_name]}")
     }
-
-    require 'pry'; binding.pry
 
     # initialize graph
     nrg = RGL::DirectedAdjacencyGraph.new.to_dot_graph
@@ -74,25 +95,75 @@ describe Synthdef do
     # the nodes together
     parsed_synthdef[:ugens].select {|x|
       not x[:ugen_name][/Control/]
-    }.each {|ugen|
-      nrg << RGL::DOT::Node.new("name" => ugen[:ugen_id],
-                                "label" => ugen[:ugen_name].to_s,
-                                "shape" => "record",
-                                "rankdir" => "LR")
-
-      ugen[:inputs].each {|i|
-        # TODO: input src of -1 is a constant
-        next if i[:src] == -1
-
-        if parsed_synthdef[:ugens][i[:src]][:ugen_name] =~ /Control/
-          nrg << RGL::DOT::DirectedEdge.new('from' => control_ugens[i[:input_constant_index]][:param_name], 'to' => ugen[:ugen_id])
-        else
-          nrg << RGL::DOT::DirectedEdge.new('from' => parsed_synthdef[:ugens][i[:src]][:ugen_id], 'to' => ugen[:ugen_id])
+    }.map! {|ugen|
+			# rename UnaryOpUgen and BinaryOpUgen based on lookup
+      if ugen[:special] != 0
+        case ugen[:ugen_name].to_s
+        when "UnaryOpUGen"
+					ugen[:label] = Synthdef::UNARY_OPS.invert[ugen[:special]]
+				when "BinaryOpUGen"
+					ugen[:label] = Synthdef::BINARY_OPS.invert[ugen[:special]]
         end
-      }
+      else
+        ugen[:label] = ugen[:ugen_name].to_s
+			end
+
+      ugen
     }
 
-    File.open('graph.dot', 'w+') {|f| f.write nrg.to_s }
+    parsed_synthdef[:ugens].select {|x|
+      not x[:ugen_name][/Control/]
+    }.each {|ugen|
+      begin
+        arg_names = IO.read(Pathname.new(File.join(Synthdef::PATH_TO_LOCAL_SUPERCOLLIDER,
+                                                   "#{ugen[:ugen_name]}.schelp"))).scan(/argument::(.+)/).flatten
+      rescue
+        $stderr.puts "Argnames couldn't be retrieved for #{ugen[:ugen_name]}. Have you set a path to your local SuperCollider install?"
+      end
+
+      port_edge_pairs = ugen[:inputs].map.with_index {|i, idx|
+        port, edge = nil
+
+        if i[:src] == -1
+          default_value = parsed_synthdef[:constants][i[:input_constant_index]]
+        else
+          default_value = nil
+        end
+
+        port_name = (arg_names[idx] || "a").to_s.strip
+        port = RGL::DOT::Port.new(port_name, [arg_names[idx], default_value].compact.join(" "))
+
+        if parsed_synthdef[:ugens][i[:src]][:ugen_name] =~ /Control/
+          from = control_ugens[i[:input_constant_index]][:param_name]
+        else
+          # the label for nodes will have a <portid>portname combo as the last line
+          # we need to make sure that the outputs are always coming from the last port
+          # in the node by using ugen_id:label
+          from = [parsed_synthdef[:ugens][i[:src]][:ugen_id], parsed_synthdef[:ugens][i[:src]][:label]].join(':')
+        end
+
+        if i[:src] != -1
+          # if input is not a constant
+          edge = RGL::DOT::DirectedEdge.new('from' => from, 'to' => [ugen[:ugen_id], port_name].join(':'))
+        end
+
+        [port, edge]
+      } # end inputs
+
+      ports = RGL::DOT::Port.new(port_edge_pairs.map {|p,e| p }.compact)
+      edges = port_edge_pairs.map {|p,e| e }.compact
+
+      nrg << RGL::DOT::Node.new({"name" => ugen[:ugen_id],
+                                 "label" => "{#{ports.to_s} | <#{ugen[:label]}>#{ugen[:label]}}",
+                                 "rankdir" => "LR",
+                                 "shape" => "record"},
+                                 (RGL::DOT::NODE_OPTS << 'rankdir'))
+      edges.each do |edge|
+        nrg << edge
+      end
+    }
+
+    File.open('graph.dot', 'w+') {|f| f.write nrg.to_s.gsub(':', '":"') }
     `dot -Tjpg -o graph.jpg graph.dot`
     puts `open graph.jpg`
   end
