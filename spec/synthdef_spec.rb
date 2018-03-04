@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'active_support'
+require 'cgi'
 
 describe Synthdef do
   let(:synthdef_binary) { IO.read(File.expand_path("../data/recorder.scsyndef", __FILE__)) }
@@ -84,7 +85,7 @@ describe Synthdef do
     # need to expand out Control Ugen using param_names and params and add these as nodes
     control_ugens = parsed_synthdef[:param_names].map {|x| x.merge(param_default_value: parsed_synthdef[:params][x[:param_index]]) }
     control_ugens.each {|ctl_ugen| nrg << RGL::DOT::Node.new("name" => ctl_ugen[:param_name],
-                                                             "label" => ctl_ugen[:param_name].to_s,
+                                                             "label" => ["control", "&#58;#{ctl_ugen[:param_name].to_s}", "default&#58; #{ctl_ugen[:param_default_value]}"].join("\n"),
                                                              "shape" => "invhouse",
                                                              "style" => "rounded, filled, bold",
                                                              "fillcolor" => "black",
@@ -100,12 +101,12 @@ describe Synthdef do
       if ugen[:special] != 0
         case ugen[:ugen_name].to_s
         when "UnaryOpUGen"
-					ugen[:label] = Synthdef::UNARY_OPS.invert[ugen[:special]]
+          ugen[:label] = CGI.escapeHTML Synthdef::UNARY_OPS.invert[ugen[:special]]
 				when "BinaryOpUGen"
-					ugen[:label] = Synthdef::BINARY_OPS.invert[ugen[:special]]
+          ugen[:label] = CGI.escapeHTML Synthdef::BINARY_OPS.invert[ugen[:special]]
         end
       else
-        ugen[:label] = ugen[:ugen_name].to_s
+        ugen[:label] = CGI.escapeHTML ugen[:ugen_name].to_s
 			end
 
       ugen
@@ -134,7 +135,8 @@ describe Synthdef do
         port = RGL::DOT::Port.new(port_name, [arg_names[idx], default_value].compact.join(" "))
 
         if parsed_synthdef[:ugens][i[:src]][:ugen_name] =~ /Control/
-          from = control_ugens[i[:input_constant_index]][:param_name]
+          param_offset = parsed_synthdef[:ugens][i[:src]][:special]
+          from = control_ugens[param_offset + i[:input_constant_index]][:param_name]
         else
           # the label for nodes will have a <portid>portname combo as the last line
           # we need to make sure that the outputs are always coming from the last port
