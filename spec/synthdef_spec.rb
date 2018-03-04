@@ -132,7 +132,8 @@ describe Synthdef do
         end
 
         port_name = (arg_names[idx] || "a").to_s.strip
-        port = RGL::DOT::Port.new(port_name, [arg_names[idx], default_value].compact.join(" "))
+        # TODO get rid of meaningless port labels like a, b and selector
+        port = RGL::DOT::Port.new(port_name, [arg_names[idx].to_s.gsub(/selector/, '&nbsp;'), default_value].compact.join(" "))
 
         if parsed_synthdef[:ugens][i[:src]][:ugen_name] =~ /Control/
           param_offset = parsed_synthdef[:ugens][i[:src]][:special]
@@ -157,6 +158,7 @@ describe Synthdef do
 
       nrg << RGL::DOT::Node.new({"name" => ugen[:ugen_id],
                                  "label" => "{#{ports.to_s} | <#{ugen[:label]}>#{ugen[:label]}}",
+                                 "style" => "bold, rounded",
                                  "rankdir" => "LR",
                                  "shape" => "record"},
                                  (RGL::DOT::NODE_OPTS << 'rankdir'))
